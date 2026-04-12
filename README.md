@@ -1,122 +1,234 @@
-===============================
-GRAPHQL CV PROJECT — RUN GUIDE
-===============================
+# GraphQL CV Project — Run Guide
 
-1) INSTALL DEPENDENCIES
------------------------
-Run this first:
+## 📋 Table of Contents
+- [Quick Start](#quick-start)
+- [Step-by-Step Setup](#step-by-step-setup)
+- [Testing Your Server](#testing-your-server)
+- [Troubleshooting](#troubleshooting)
+- [Recommended Stack](#recommended-stack)
 
+---
+
+## 🚀 Quick Start
+
+```bash
 npm install
+npm start
+```
 
+Then open: **http://localhost:4000/graphql**
 
-2) START THE SERVER (RECOMMENDED)
----------------------------------
-This project uses TypeScript (ESM), so the best runner is tsx.
+---
 
-Install tsx (first time only):
+## 📖 Step-by-Step Setup
 
-npm install -D tsx
+### Step 1: Install Dependencies
 
-Run the server:
+Install all required packages:
 
-npx tsx src/server.ts
+```bash
+npm install
+```
 
+**Installed packages:**
+- `graphql-yoga` — GraphQL server
+- `graphql` — Core GraphQL library
+- `graphql-subscriptions` — Real-time subscriptions
+- `@graphql-tools/schema` — Schema builder
+- `typescript` — Type safety
+- `ts-node` — TypeScript executor
 
-3) OPEN GRAPHQL IN BROWSER
---------------------------
-Once the server is running:
+---
 
+### Step 2: Start the Server
+
+This project uses **TypeScript (ESM)**, so we use the standard ts-node loader:
+
+```bash
+npm start
+```
+
+**Expected Output:**
+```
+╔═══════════════════════════════════════════╗
+║   GraphQL Server Running - Step 1 ✅      ║
+╠═══════════════════════════════════════════╣
+║   Server:   http://localhost:4000         ║
+║   Yoga:     http://localhost:4000/graphql ║
+║   Status:   Ready for queries             ║
+╚═══════════════════════════════════════════╝
+```
+
+---
+
+### Step 3: Open GraphQL IDE
+
+Navigate to your browser:
+
+```
 http://localhost:4000/graphql
+```
 
-You will see GraphiQL interface.
+You will see the **GraphiQL interface** with:
+- Query editor (left panel)
+- Results viewer (right panel)
+- Documentation explorer (right sidebar)
 
+---
 
-4) TEST QUERY
--------------
-Run this inside GraphiQL:
+### Step 4: Test with a Query
 
+Copy & paste into GraphiQL:
+
+```graphql
 query {
-  _empty
+  hello
 }
+```
 
-Expected response:
-
+**Expected Response:**
+```json
 {
   "data": {
-    "_empty": "Server is running"
+    "hello": "👋 GraphQL server is running! Step 1 ✅"
   }
 }
-
-
-===============================
-COMMON ERRORS & FIXES
-===============================
-
-1) ERROR: Unknown file extension ".ts"
---------------------------------------
-Cause:
-- Using ts-node in ESM project
-
-Fix:
-Use tsx instead:
-
-npx tsx src/server.ts
-
-
-2) ERROR: Cannot find module 'tsx'
------------------------------------
-Fix:
-
-npm install -D tsx
-
-
-3) ERROR: ENOENT schema.graphql
--------------------------------
-Cause:
-- Wrong file path
-
-Fix:
-Make sure file exists:
-
-src/schema.graphql
-
-And load it like:
-
-fs.readFileSync("./src/schema.graphql", "utf-8")
-
-
-4) ERROR: Subscription defined but not in schema
-------------------------------------------------
-Fix:
-Add this to schema.graphql:
-
-type Subscription {
-  cvUpdated: String
-}
-
-
-5) SERVER NOT STARTING / PORT ERROR
------------------------------------
-Fix:
-Change port:
-
-server.listen(4001)
-
-
-===============================
-RECOMMENDED STACK
-===============================
-
-- tsx (TypeScript runner)
-- GraphQL Yoga (server)
-- SDL schema (.graphql file)
-
-===============================
-WORKFLOW SUMMARY
-===============================
-
-npm install
-npm install -D tsx
-npx tsx src/server.ts
-open http://localhost:4000/graphql
 ```
+
+✅ **If you see this, your server is working!**
+
+---
+
+## 🧪 Testing Your Server
+
+### Query: Hello World
+```graphql
+query {
+  hello
+}
+```
+
+### Expected Files Structure
+```
+graphql-team-project/
+├── db.ts                  ← Mock database (Users, CVs, Skills)
+├── server.ts              ← GraphQL Yoga server
+├── package.json           ← Dependencies
+├── tsconfig.json          ← TypeScript config
+├── node_modules/          ← (auto-generated)
+└── README.md              ← This file
+```
+
+---
+
+## ⚠️ Troubleshooting
+
+### Error 1: "Unknown file extension '.ts'"
+
+**Cause:** Incorrect TypeScript loader
+
+**Fix:** Use the proper start script:
+```bash
+npm start
+```
+
+---
+
+### Error 2: "Cannot find module 'graphql-yoga'"
+
+**Cause:** Dependencies not installed
+
+**Fix:**
+```bash
+npm install
+```
+
+---
+
+### Error 3: "EADDRINUSE: address already in use :::4000"
+
+**Cause:** Port 4000 is already in use (another server running)
+
+**Fix:** Change the port in `server.ts`:
+```typescript
+const PORT = process.env.PORT || 4001; // Change to 4001
+```
+
+Then restart:
+```bash
+npm start
+```
+
+---
+
+### Error 4: "Cannot find module './db'"
+
+**Cause:** Wrong import path or missing db.ts file
+
+**Fix:** Verify files exist:
+```bash
+ls -la db.ts server.ts
+```
+
+If missing, re-create them from the project setup.
+
+---
+
+### Error 5: "Schema must contain Query type"
+
+**Cause:** TypeDefs are malformed
+
+**Fix:** Ensure `server.ts` has a valid Query type:
+```graphql
+type Query {
+  hello: String!
+}
+```
+
+---
+
+## 🛠️ Recommended Stack
+
+| Component | Tool | Why |
+|-----------|------|-----|
+| **Server** | GraphQL Yoga | Fast, supports subscriptions, websockets |
+| **Language** | TypeScript | Type-safe resolvers, better DX |
+| **Runner** | ts-node | Native ESM support |
+| **Schema** | SDL (string in server.ts) | Easy to version, readable |
+| **Real-time** | graphql-subscriptions (PubSub) | Event-driven architecture |
+
+---
+
+## 📝 Development Workflow
+
+### Start Development (With Watch Mode)
+```bash
+npm run dev
+```
+
+### Stop Server
+```
+Press Ctrl + C
+```
+
+### Check Server Status
+```bash
+curl http://localhost:4000/graphql
+```
+
+---
+
+
+
+## ✅ Success Checklist
+
+- [ ] Dependencies installed (`npm install`)
+- [ ] Server starts without errors (`npm start`)
+- [ ] GraphiQL opens at http://localhost:4000/graphql
+- [ ] `hello` query returns success message
+- [ ] No TypeScript errors in terminal
+
+
+---
+
+*Last Updated: April 12, 2026*

@@ -5,5 +5,3 @@ type Query {
 type Subscription {
   cvUpdated: String
 }
-//==== Notes =====
-// don't mind the {  error in vscode

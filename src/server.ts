@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { createYoga, createPubSub, createSchema } from "graphql-yoga";
 import { db } from "./db.js";
 import fs from "fs";
-
+import path from "path";
 const pubsub = createPubSub();
 
 export interface Context {
@@ -10,8 +10,10 @@ export interface Context {
   pubsub: typeof pubsub;
 }
 
-const typeDefs = fs.readFileSync("./schema.graphql", "utf-8");
-
+const typeDefs = fs.readFileSync(
+  path.resolve(process.cwd(), "src/schema.graphql"),
+  "utf-8"
+);
 const resolvers = {
   Query: {
     _empty: () => "Server is running"

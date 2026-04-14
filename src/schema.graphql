@@ -1,7 +1,24 @@
-type Query {
-  _empty: String
+enum Role {       # Why enum? So role can ONLY be USER or ADMIN
+  USER             # not "admin", not "superuser", not a typo
+  ADMIN
 }
 
-type Subscription {
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: Role!
+  cvs: [Cv!]!    # you're promising clients they can get a user's CVs
+}
+type Cv {
+  id: ID!
+}
+
+type Query {
+  _empty: String        # keep Person 4's placeholder
+  user(id: ID!): User   # get one user by id
+  users: [User!]!       # get all users
+}
+type Subscription{
   cvUpdated: String
 }

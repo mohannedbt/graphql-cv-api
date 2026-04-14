@@ -4,6 +4,7 @@ import { db } from "./db.js";
 import fs from "fs";
 import path from "path";
 import { userResolvers } from "./resolvers/user.js";
+import { cvResolvers } from "./resolvers/cv.js";
 const pubsub = createPubSub();
 
 export interface Context {
@@ -19,9 +20,10 @@ const resolvers = {
   Query: {
     _empty: () => "Server is running", // add resolvers here
     ...userResolvers.Query,        // ← spreads your user/users queries in
-
+    ...cvResolvers.Query           // ← spreads your cv queries in
   },
   User: userResolvers.User,        // ← adds User.cvs resolver
+  Cv: cvResolvers.Cv,              // ← adds Cv skillIds resolver
 
   Subscription: {
     cvUpdated: {

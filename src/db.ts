@@ -10,15 +10,54 @@ export const db = {
   ],
 
   cvs: [
-    {
-      id: "cv1",
-      name: "Dev CV",
-      age: 22,
-      job: "Developer",
-      owner: "1",
-      skillIds: ["s1", "s2"]
-    }
-
+      {
+        id: "cv1",
+        name: "Dev CV",
+        age: 22,
+        job: "Developer",
+        owner: "1",
+        skillIds: ["s1", "s2"]
+      },
+      {
+        id: "cv2",
+        name: "Design CV",
+        age: 25,
+        job: "UI/UX Designer",
+        owner: "2",
+        skillIds: ["s2", "s3"]
+      },
+      {
+        id: "cv3",
+        name: "Data CV",
+        age: 28,
+        job: "Data Analyst",
+        owner: "1",
+        skillIds: ["s1", "s3"]
+      },
+      {
+        id: "cv4",
+        name: "PM CV",
+        age: 30,
+        job: "Product Manager",
+        owner: "3",
+        skillIds: ["s1", "s2", "s3"]
+      },
+      {
+        id: "cv5",
+        name: "DevOps CV",
+        age: 24,
+        job: "DevOps Engineer",
+        owner: "2",
+        skillIds: ["s3"]
+      },
+      {
+        id: "cv6",
+        name: "QA CV",
+        age: 26,
+        job: "QA Engineer",
+        owner: "3",
+        skillIds: ["s1", "s2"]
+      }
   ],
 
   skills: [

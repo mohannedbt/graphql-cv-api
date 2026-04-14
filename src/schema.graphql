@@ -12,12 +12,24 @@ type User {
 }
 type Cv {
   id: ID!
+  name: String!
+  age: Int!
+  job: String!
+  owner: User!
+  skillIds: [String!]!
+  skills: [Skill!]!  # ← add this line to Cv type
+}
+type Skill {
+  id: ID!
+  name: String!
 }
 
 type Query {
   _empty: String        # keep Person 4's placeholder
   user(id: ID!): User   # get one user by id
-  users: [User!]!       # get all users
+  users: [User!]!
+  cv(id: ID!): Cv        # get one cv by id
+  cvs: [Cv!]!          # get all cvs
 }
 type Subscription{
   cvUpdated: String

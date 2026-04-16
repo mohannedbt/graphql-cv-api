@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { userResolvers } from "./resolvers/user.js";
 import { cvResolvers } from "./resolvers/cv.js";
+import { mutationResolvers } from "./resolvers/mutation.js";
 const pubsub = createPubSub();
 
 export interface Context {
@@ -30,6 +31,10 @@ const resolvers = {
       subscribe: (_: any, __: any, ctx: Context) =>
         ctx.pubsub.subscribe("CV_UPDATED")
     }
+  },
+
+  Mutation: {
+    ...mutationResolvers.Mutation
   }
 };
 

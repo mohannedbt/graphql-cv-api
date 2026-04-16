@@ -24,6 +24,32 @@ type Skill {
   name: String!
 }
 
+
+# --- Mutation Inputs ---
+input AddCvInput {
+  id: ID!
+  name: String!
+  age: Int!
+  job: String!
+  owner: ID!
+  skillIds: [String!]!
+}
+
+input UpdateCvInput {
+  id: ID!
+  name: String
+  age: Int
+  job: String
+  owner: ID
+  skillIds: [String!]
+}
+
+type Mutation {
+  addCv(input: AddCvInput!): Cv!
+  updateCv(input: UpdateCvInput!): Cv!
+  deleteCv(id: ID!): Boolean!
+}
+
 type Query {
   _empty: String        # keep Person 4's placeholder
   user(id: ID!): User   # get one user by id
@@ -31,6 +57,7 @@ type Query {
   cv(id: ID!): Cv        # get one cv by id
   cvs: [Cv!]!          # get all cvs
 }
+
 type Subscription{
   cvUpdated: String
 }

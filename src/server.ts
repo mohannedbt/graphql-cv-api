@@ -1,15 +1,24 @@
 import { createServer } from "node:http";
 import { createYoga, createPubSub, createSchema } from "graphql-yoga";
-import { db } from "./db.js";
+// import { db } from "./db.js";
 import fs from "fs";
 import path from "path";
 import { userResolvers } from "./resolvers/user.js";
 import { cvResolvers } from "./resolvers/cv.js";
 import { mutationResolvers } from "./resolvers/mutation.js";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "@prisma/client";
+
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL ?? "file:./dev.db"
+});
+
+export const prisma = new PrismaClient({ adapter });
+
 const pubsub = createPubSub();
 
 export interface Context {
-  db: typeof db;
+  prisma: typeof prisma;
   pubsub: typeof pubsub;
 }
 
@@ -46,7 +55,7 @@ const schema = createSchema({
 const yoga = createYoga<Context>({
   schema,
   context: () => ({
-    db,
+    prisma,
     pubsub
   })
 });
@@ -56,7 +65,3 @@ const server = createServer(yoga);
 server.listen(4000, () => {
   console.log("GraphQL server running: http://localhost:4000/graphql");
 });
-
-//========= Notes ======================
-// when u add a resolver for a field, u have to add it in the resolvers object and not forget to add it in the schema.graphql
-// the resolvers object is what tells GraphQL how to get the data for each field in the schema

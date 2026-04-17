@@ -7,15 +7,18 @@ export const cvResolvers = {
     // When client asks: cv(id: "1") { ... }
     // args = { id: "1" }
     // ctx.db.cvs = the array from db.ts
-    cv: (_: unknown, args: { id: string }, ctx: Context) => {
-      console.log("Resolving cv with id:", args.id)
-      console.log("Current cvs in DB:", ctx.db.cvs)
-      return ctx.db.cvs.find(cv => cv.id === args.id)
+    cv: async (_: unknown, args: { id: string }, ctx: Context) => {
+      const cv = await ctx.prisma.cv.findUnique({
+        where: { id: args.id },
+        include: { skills: true, owner: true }
+      })
+      return cv
     },
-    cvs: (_: unknown, __: unknown, ctx: Context) => {
-      console.log("Resolving all cvs")
-      console.log("Current cvs in DB:", ctx.db.cvs)
-      return ctx.db.cvs
+    cvs: async (_: unknown, __: unknown, ctx: Context) => {
+      const cvs = await ctx.prisma.cv.findMany({
+        include: { skills: true, owner: true }
+      })
+      return cvs
     }
   },
 
@@ -24,13 +27,11 @@ export const cvResolvers = {
     // When client asks: cv(id:"1") { skillIds }
     // GraphQL first resolves the Cv (parent = that cv object)
     // then calls THIS to get its skillIds
-    skills: (parent: { id: string; skillIds: string[] }, _: unknown, ctx: Context) => {
-      console.log("Resolving skills for cv with id:", parent.id)
-      console.log("Current cvs in DB:", ctx.db.cvs)
-      return parent.skillIds.map((skillId: string) => ctx.db.skills.find(s => s.id === skillId)) ?? []
+    skills: (parent: { skills : string[] }, _: unknown, ctx: Context) => {
+      return parent.skills;
     },
     owner: (parent: { owner: string }, _: unknown, ctx: Context) => {
-      return ctx.db.users.find(u => u.id === parent.owner) ?? null
+      return parent.owner;
     }
   }
-}
+};

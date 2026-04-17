@@ -41,7 +41,7 @@ input UpdateCvInput {
   age: Int
   job: String
   owner: ID
-  skillIds: [String!]
+  skillIds: [String]
 }
 
 type Mutation {

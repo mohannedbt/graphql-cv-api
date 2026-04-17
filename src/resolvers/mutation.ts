@@ -25,6 +25,14 @@ export const mutationResolvers = {
       }
       // Add CV to db
       ctx.db.cvs.push({ ...input });
+      // Publish CV update event
+      ctx.pubsub.publish("CV_UPDATED", {
+        cvUpdated: {
+          cv: { ...input },
+          operation: "ADD"
+        }
+      });
+
       // Return the newly added CV object
       return ctx.db.cvs.find(cv => cv.id === input.id);
     },
@@ -50,6 +58,13 @@ export const mutationResolvers = {
       }
       // Update fields
       Object.assign(cvToUpdate, input);
+      // Publish CV update event
+      ctx.pubsub.publish("CV_UPDATED", {
+        cvUpdated: {
+          cv: cvToUpdate,
+          operation: "UPDATE"
+        }
+      });
       return cvToUpdate;
     },
 
@@ -61,6 +76,13 @@ export const mutationResolvers = {
         throw new GraphQLError(`CV with id ${id} not found`);
       }
       ctx.db.cvs.splice(cvIndex, 1);
+      // Publish CV update event
+      ctx.pubsub.publish("CV_UPDATED", {
+        cvUpdated: {
+          cv: null,
+          operation: "DELETE"
+        }
+      });
       // Return true for success
       return true;
     }

@@ -58,6 +58,12 @@ type Query {
   cvs: [Cv!]!          # get all cvs
 }
 
+type CvUpdatePayload {
+  cv: Cv
+  operation: String!
+}
+
+
 type Subscription{
-  cvUpdated: String
+  cvUpdated: CvUpdatePayload!
 }

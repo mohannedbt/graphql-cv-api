@@ -20,7 +20,7 @@ export const userResolvers = {
         const users = await ctx.prisma.user.findMany({
           include: { cvs: true }
         })
-        return users 
+        return users ?? [];
         },
   },
 
@@ -28,8 +28,12 @@ export const userResolvers = {
   User: {
     
     
-    cvs: (parent: { cvs: string[] }, _: unknown, ctx: Context) => {
-      return parent.cvs;
+    cvs: async (parent: { cvs: any[], id: string }, _: unknown, ctx: Context) => {
+      // If parent.cvs is already present (from include), use it
+      if (parent.cvs !== undefined) return parent.cvs;
+      // Otherwise, fetch from Prisma
+      const cvs = await ctx.prisma.cv.findMany({ where: { ownerId: parent.id }, include: { skills: true, owner: true } });
+      return cvs ?? [];
     }
   }
 }

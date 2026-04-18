@@ -18,7 +18,7 @@ export const cvResolvers = {
       const cvs = await ctx.prisma.cv.findMany({
         include: { skills: true, owner: true }
       })
-      return cvs
+      return cvs ?? [];
     }
   },
 
@@ -30,8 +30,12 @@ export const cvResolvers = {
     skills: (parent: { skills : string[] }, _: unknown, ctx: Context) => {
       return parent.skills;
     },
-    owner: (parent: { owner: string }, _: unknown, ctx: Context) => {
-      return parent.owner;
+    owner: async (parent: { owner: { id: string } }, _: unknown, ctx: Context) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: parent.owner.id },
+        include: { cvs: true }
+      });
+      return user;
     }
   }
 };

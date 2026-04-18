@@ -38,19 +38,19 @@ export const mutationResolvers = {
   }
       });
       // Publish CV update event
+      const cvWithRelations = await ctx.prisma.cv.findUnique({
+        where: { id: cv.id },
+        include: { skills: true, owner: true }
+      });
       ctx.pubsub.publish("CV_UPDATED", {
         cvUpdated: {
-          cv: {
-            ...cv,
-            skillsId: input.skillIds,
-            owner: input.owner
-          },
+          cv: cvWithRelations,
           operation: "ADD"
         }
       });
 
       // Return the newly added CV object
-      return cv;
+      return cvWithRelations;
     },
 
     // Update an existing CV by id
@@ -87,13 +87,17 @@ export const mutationResolvers = {
   }
       });
       // Publish CV update event
+      const cvWithRelations = await ctx.prisma.cv.findUnique({
+        where: { id: cv.id },
+        include: { skills: true, owner: true } 
+      });
       ctx.pubsub.publish("CV_UPDATED", {
         cvUpdated: {
-          cv: cv,
+          cv: cvWithRelations,
           operation: "UPDATE"
         }
       });
-      return cv;
+      return cvWithRelations;
     },
 
     // Delete a CV by id

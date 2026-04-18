@@ -16,7 +16,6 @@ type Cv {
   age: Int!
   job: String!
   owner: User!
-  skillIds: [String!]!
   skills: [Skill!]!  # ← add this line to Cv type
 }
 type Skill {

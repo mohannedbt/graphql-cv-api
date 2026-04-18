@@ -4,7 +4,7 @@ import type { Cv } from './cv.ts';
 
 // Define your event channels and payloads
 export type PubSubChannels = {
-  CV_UPDATED: [{ cv: Cv; operation: string }];
+  CV_UPDATED: [{ cv: Cv | null; operation: string }];
 };
 
 export type Context = {

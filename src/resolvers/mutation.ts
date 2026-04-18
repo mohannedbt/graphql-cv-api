@@ -54,10 +54,8 @@ export const mutationResolvers = {
           include: { skills: true, owner: true }
         });
         ctx.pubsub.publish("CV_UPDATED", {
-          cvUpdated: {
-            cv: cvWithRelations,
-            operation: "ADD"
-          }
+          cv: cvWithRelations,
+          operation: "ADD"
         });
         log('CV added', { id: input.id });
         return cvWithRelations as Cv;
@@ -102,10 +100,8 @@ export const mutationResolvers = {
           include: { skills: true, owner: true }
         });
         ctx.pubsub.publish("CV_UPDATED", {
-          cvUpdated: {
-            cv: cvWithRelations,
-            operation: "UPDATE"
-          }
+          cv: cvWithRelations,
+          operation: "UPDATE"
         });
         log('CV updated', { id: input.id });
         return cvWithRelations as Cv;
@@ -133,10 +129,8 @@ export const mutationResolvers = {
         }
         await ctx.prisma.cv.delete({ where: { id } });
         ctx.pubsub.publish("CV_UPDATED", {
-          cvUpdated: {
-            cv: null,
-            operation: "DELETE"
-          }
+          cv: null,
+          operation: "DELETE"
         });
         log('CV deleted', { id });
         return true;

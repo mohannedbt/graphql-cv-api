@@ -8,6 +8,7 @@ import { cvResolvers } from "./resolvers/cv.js";
 import { mutationResolvers } from "./resolvers/mutation.js";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "@prisma/client";
+import type { Cv } from "./types/cv.js";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./dev.db"
@@ -38,7 +39,8 @@ const resolvers = {
   Subscription: {
     cvUpdated: {
       subscribe: (_: any, __: any, ctx: Context) =>
-        ctx.pubsub.subscribe("CV_UPDATED")
+        ctx.pubsub.subscribe("CV_UPDATED"),
+      resolve: (payload: { cv: Cv | null; operation: string }) => payload
     }
   },
 

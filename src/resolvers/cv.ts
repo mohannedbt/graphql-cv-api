@@ -28,7 +28,7 @@ export const cvResolvers = {
     // GraphQL first resolves the Cv (parent = that cv object)
     // then calls THIS to get its skillIds
     skills: (parent: { skills : string[] }, _: unknown, ctx: Context) => {
-      return parent.skills;
+      return parent.skills ?? [];
     },
     owner: async (parent: { owner: { id: string } }, _: unknown, ctx: Context) => {
       const user = await ctx.prisma.user.findUnique({

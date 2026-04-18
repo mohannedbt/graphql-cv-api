@@ -1,7 +1,7 @@
-import { User as PrismaUser } from '@prisma/client';
+import type { User as PrismaUser } from '@prisma/client';
 
 export type User = PrismaUser & {
   cvs: Cv[];
 };
 
-import type { Cv } from './cv';
+import type { Cv } from './cv.ts';

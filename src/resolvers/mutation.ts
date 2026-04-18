@@ -1,123 +1,152 @@
 
-import type { Context } from "../server.js";
-import { GraphQLError } from "graphql";
 
+
+import type { Context } from "../types/context.js";
+import { GraphQLError } from "graphql";
 import type { AddCvArgs, UpdateCvArgs, DeleteCvArgs } from "../types/cvMutationArgs.js";
+import type { Cv } from "../types/cv.js";
+import { validateUserExists, validateSkillsExist } from "../utils/validation.js";
+
+/**
+ * Logs GraphQL resolver events and errors.
+ * @param message - The message to log
+ * @param meta - Optional metadata
+ */
+function log(message: string, meta?: any) {
+  if (meta) {
+    console.log(`[mutation] ${message}`, meta);
+  } else {
+    console.log(`[mutation] ${message}`);
+  }
+}
 
 export const mutationResolvers = {
   Mutation: {
-    // Add a new CV after validating user and skills
-    addCv: async (_: unknown, args: AddCvArgs, ctx: Context) => {
+    /**
+     * Adds a new CV after validating user and skills.
+     * Throws BAD_USER_INPUT if validation fails.
+     */
+    addCv: async (_: unknown, args: AddCvArgs, ctx: Context): Promise<Cv> => {
       const { input } = args;
-      // Check for duplicate CV id
-      if (await ctx.prisma.cv.findUnique({ where: { id: input.id } })) {
-        throw new GraphQLError(`CV with id ${input.id} already exists`);
-      }
-      // Validate owner exists
-      if (!await ctx.prisma.user.findUnique({ where: { id: input.owner } })) {
-        throw new GraphQLError(`Owner with id ${input.owner} does not exist`);
-      }
-      // Validate all skills exist
-      for (const skillId of input.skillIds) {
-        if (!await ctx.prisma.skill.findUnique({ where: { id: skillId } })) {
-          throw new GraphQLError(`Skill with id ${skillId} does not exist`);
+      try {
+        if (await ctx.prisma.cv.findUnique({ where: { id: input.id } })) {
+          log('Attempt to add duplicate CV', { id: input.id });
+          throw new GraphQLError(`CV with id ${input.id} already exists`, {
+            extensions: { code: 'BAD_USER_INPUT' }
+          });
         }
-      }
-      // Add CV to db
-      // TODO: haffouz, mohanned, elyess help plz T-T
-      const cv = await ctx.prisma.cv.create({
-        data: {
-        id: input.id,
-        name: input.name,
-        age: input.age,
-        job: input.job,
-        ownerId: input.owner,
-        skills: {
-        connect: input.skillIds.map((id: string) => ({ id }))
-    }
-  }
-      });
-      // Publish CV update event
-      const cvWithRelations = await ctx.prisma.cv.findUnique({
-        where: { id: cv.id },
-        include: { skills: true, owner: true }
-      });
-      ctx.pubsub.publish("CV_UPDATED", {
-        cvUpdated: {
-          cv: cvWithRelations,
-          operation: "ADD"
-        }
-      });
-
-      // Return the newly added CV object
-      return cvWithRelations;
-    },
-
-    // Update an existing CV by id
-    updateCv: async (_: unknown, args: UpdateCvArgs, ctx: Context) => {
-      const { input } = args;
-      const cvToUpdate = await ctx.prisma.cv.findUnique({ where: { id: input.id } });
-      if (!cvToUpdate) {
-        throw new GraphQLError(`CV with id ${input.id} not found`);
-      }
-      // If updating owner, validate user exists
-      if (input.owner && !await ctx.prisma.user.findUnique({ where: { id: input.owner } })) {
-        throw new GraphQLError(`Owner with id ${input.owner} does not exist`);
-      }
-      // If updating skills, validate all exist
-      if (input.skillIds) {
-        for (const skillId of input.skillIds) {
-          if (!await ctx.prisma.skill.findUnique({ where: { id: skillId } })) {
-            throw new GraphQLError(`Skill with id ${skillId} does not exist`);
+        await validateUserExists(ctx.prisma, input.owner);
+        await validateSkillsExist(ctx.prisma, input.skillIds);
+        const cv = await ctx.prisma.cv.create({
+          data: {
+            id: input.id,
+            name: input.name,
+            age: input.age,
+            job: input.job,
+            ownerId: input.owner,
+            skills: {
+              connect: input.skillIds.map((id: string) => ({ id }))
+            }
           }
-        }
+        });
+        const cvWithRelations = await ctx.prisma.cv.findUnique({
+          where: { id: cv.id },
+          include: { skills: true, owner: true }
+        });
+        ctx.pubsub.publish("CV_UPDATED", {
+          cvUpdated: {
+            cv: cvWithRelations,
+            operation: "ADD"
+          }
+        });
+        log('CV added', { id: input.id });
+        return cvWithRelations as Cv;
+      } catch (err: any) {
+        log('Error adding CV', err);
+        if (err instanceof GraphQLError) throw err;
+        throw new GraphQLError('Unexpected error while adding CV', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR' }
+        });
       }
-      // Update fields
-      // TODO: haffouz, mohanned, elyess help plz T-T
-      const cv = await ctx.prisma.cv.update({
-        where: { id: input.id },
-        data: {
-        ...(input.name && { name: input.name }),
-        ...(input.age && { age: input.age }),
-        ...(input.job && { job: input.job }),
-        ...(input.owner && { ownerId: input.owner }),
-        ...(input.skillIds && {
-          skills: { set: input.skillIds.map((id: string) => ({ id })) }
-    })
-  }
-      });
-      // Publish CV update event
-      const cvWithRelations = await ctx.prisma.cv.findUnique({
-        where: { id: cv.id },
-        include: { skills: true, owner: true } 
-      });
-      ctx.pubsub.publish("CV_UPDATED", {
-        cvUpdated: {
-          cv: cvWithRelations,
-          operation: "UPDATE"
-        }
-      });
-      return cvWithRelations;
     },
 
-    // Delete a CV by id
-    deleteCv: async (_: unknown, args: DeleteCvArgs, ctx: Context) => {
-      const { id } = args;
-      
-      const cv = await ctx.prisma.cv.findUnique({ where: { id } });
-      if (!cv) {
-        throw new GraphQLError(`CV with id ${id} not found`);
-      }
-      await ctx.prisma.cv.delete({ where: { id } });
-      // Publish CV update event
-      ctx.pubsub.publish("CV_UPDATED", {
-        cvUpdated: {
-          cv: null,
-          operation: "DELETE"
+    /**
+     * Updates an existing CV by id. Throws NOT_FOUND or BAD_USER_INPUT.
+     */
+    updateCv: async (_: unknown, args: UpdateCvArgs, ctx: Context): Promise<Cv> => {
+      const { input } = args;
+      try {
+        const cvToUpdate = await ctx.prisma.cv.findUnique({ where: { id: input.id } });
+        if (!cvToUpdate) {
+          log('CV not found for update', { id: input.id });
+          throw new GraphQLError(`CV with id ${input.id} not found`, {
+            extensions: { code: 'NOT_FOUND' }
+          });
         }
-      });
-      // Return true for success
-      return true;
+        if (input.owner) await validateUserExists(ctx.prisma, input.owner);
+        if (input.skillIds) await validateSkillsExist(ctx.prisma, input.skillIds);
+        const cv = await ctx.prisma.cv.update({
+          where: { id: input.id },
+          data: {
+            ...(input.name !== undefined && { name: input.name }),
+            ...(input.age !== undefined && { age: input.age }),
+            ...(input.job !== undefined && { job: input.job }),
+            ...(input.owner !== undefined && { ownerId: input.owner }),
+            ...(input.skillIds !== undefined && {
+              skills: { set: input.skillIds.map((id: string) => ({ id })) }
+            })
+          }
+        });
+        const cvWithRelations = await ctx.prisma.cv.findUnique({
+          where: { id: cv.id },
+          include: { skills: true, owner: true }
+        });
+        ctx.pubsub.publish("CV_UPDATED", {
+          cvUpdated: {
+            cv: cvWithRelations,
+            operation: "UPDATE"
+          }
+        });
+        log('CV updated', { id: input.id });
+        return cvWithRelations as Cv;
+      } catch (err: any) {
+        log('Error updating CV', err);
+        if (err instanceof GraphQLError) throw err;
+        throw new GraphQLError('Unexpected error while updating CV', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR' }
+        });
+      }
+    },
+
+    /**
+     * Deletes a CV by id. Throws NOT_FOUND if not found.
+     */
+    deleteCv: async (_: unknown, args: DeleteCvArgs, ctx: Context): Promise<boolean> => {
+      const { id } = args;
+      try {
+        const cv = await ctx.prisma.cv.findUnique({ where: { id } });
+        if (!cv) {
+          log('CV not found for delete', { id });
+          throw new GraphQLError(`CV with id ${id} not found`, {
+            extensions: { code: 'NOT_FOUND' }
+          });
+        }
+        await ctx.prisma.cv.delete({ where: { id } });
+        ctx.pubsub.publish("CV_UPDATED", {
+          cvUpdated: {
+            cv: null,
+            operation: "DELETE"
+          }
+        });
+        log('CV deleted', { id });
+        return true;
+      } catch (err: any) {
+        log('Error deleting CV', err);
+        if (err instanceof GraphQLError) throw err;
+        throw new GraphQLError('Unexpected error while deleting CV', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR' }
+        });
+      }
     }
   }
 };
